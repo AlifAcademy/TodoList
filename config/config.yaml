@@ -1,0 +1,9 @@
+db:
+  host: localhost
+  port: 8080
+  username: todo_list_user
+  password: 12345
+  db_name: todo_list_db
+todo:
+  host: localhost
+  port: 8080
