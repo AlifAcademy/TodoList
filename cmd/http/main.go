@@ -1,13 +1,8 @@
 package main
 
-import (
-	"github.com/AlifAcademy/TodoList/internal/logger"
-	log "github.com/sirupsen/logrus"
-)
+import "github.com/AlifAcademy/TodoList/internal/logger"
 
 func main() {
-	logger.NewLogger()
-	log.WithFields(log.Fields{
-		"test": "another thing",
-	}).Info("Just a test message 123")
+	log := logger.NewFileLogger("logfile.log")
+	log.Info("some test")
 }
