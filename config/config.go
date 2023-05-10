@@ -6,10 +6,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-
-
-type Config interface {	
-	Get(key string) interface{} 
+// Config interface
+type Config interface {
+	Get(key string) interface{}
 	GetString(key string) string
 	IsSet(key string) bool
 	GetInt(key string) int64
@@ -19,8 +18,9 @@ type config struct {
 	cfg *viper.Viper
 }
 
+// New constructor creates a new instance of Config
 func New() Config {
-	
+
 	cfg := *viper.New()
 	cfg.SetConfigName("config.yaml")
 	cfg.SetConfigType("yaml")
@@ -33,7 +33,6 @@ func New() Config {
 
 	return &config{cfg: &cfg}
 }
-
 
 func (c *config) Get(key string) interface{} {
 	return c.cfg.Get(key)

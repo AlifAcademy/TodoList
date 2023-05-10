@@ -6,21 +6,25 @@ import (
 	"os"
 )
 
+// Logger interface
 type Logger interface {
 	Info(message string)
 	Error(err error)
 }
 
+// FileLogger logs inside the file
 type FileLogger struct {
 	filename string
 }
 
+// NewFileLogger creates a new instance of FileLogger
 func NewFileLogger(filename string) *FileLogger {
 	return &FileLogger{
 		filename: filename,
 	}
 }
 
+// Print method outputs an appropriate log according to the level
 func (f *FileLogger) Print(level log.Level, message string) {
 	file, err := os.OpenFile(f.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -42,6 +46,7 @@ func (f *FileLogger) Print(level log.Level, message string) {
 	}
 }
 
+// Info method just logs a message
 func (f *FileLogger) Info(message string) {
 	f.Print(log.InfoLevel, message)
 }
