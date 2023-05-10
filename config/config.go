@@ -7,7 +7,7 @@ import (
 )
 
 
-
+// Config inface config
 type Config interface {	
 	Get(key string) interface{} 
 	GetString(key string) string
@@ -19,6 +19,7 @@ type config struct {
 	cfg *viper.Viper
 }
 
+// New constructor Config
 func New() Config {
 	
 	cfg := *viper.New()
