@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  todo_db:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=todo_list_user
+      - POSTGRES_PASSWORD=secure_password
+      - POSTGRES_DB=todo_list_db
+      - SSLMODE=false
