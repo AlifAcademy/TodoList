@@ -20,9 +20,8 @@ type configDB struct {
 
 // NewPostgresDB new connnect to PostgreSQL Database  
 func NewPostgresDB(cfg config.Config) (*pgxpool.Pool, error) {
-
-	var configDb *configDB 
-	configDb = &configDB{
+ 
+	configDb := &configDB{
 		Host: cfg.GetString("db.host"),
 		Port: cfg.GetString("db.port"),
 		Username: cfg.GetString("db.username"),
