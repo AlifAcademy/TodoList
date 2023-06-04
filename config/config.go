@@ -29,7 +29,7 @@ func New() Config {
 	cfg.AddConfigPath("./config")
 
 	if err := cfg.ReadInConfig(); err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
 	return &config{cfg: &cfg}
