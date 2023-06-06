@@ -3,9 +3,9 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
-
 	"github.com/AlifAcademy/TodoList/internal/logger"
 	"github.com/AlifAcademy/TodoList/internal/middleware"
 	"github.com/AlifAcademy/TodoList/internal/service"
@@ -62,6 +62,8 @@ func (s *Server) Init() {
 	s.mux.Handle("/api/tasks/cancel/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCanceled))).Methods(UPDATE)
 
 	s.mux.Handle("/api/comments", chMd(http.HandlerFunc(s.handleAddComment))).Methods(POST)
+
+	s.mux.Handle("/api/tagstatus", chMd(http.HandlerFunc(s.handleGetStatusAndTag))).Methods(GET)
 }
 
 func (s *Server) handleNewUser(writer http.ResponseWriter, request *http.Request) {
@@ -171,10 +173,14 @@ func (s *Server) handleDeleteTaskByID(writer http.ResponseWriter, request *http.
 }
 
 func (s *Server) handleGetAllTasks(writer http.ResponseWriter, request *http.Request)  {
+	status := request.URL.Query().Get("status")
+	tag := request.URL.Query().Get("tag")
+	log.Print(tag)
+
 	value := request.Context().Value(types.Key("key"))
 	userID := value.(int64)
 	
-	items, err := s.userSvc.GetAllTasks(request.Context(), userID)
+	items, err := s.userSvc.GetAllTasks(request.Context(), userID, tag, status)
 	if errors.Is(err, service.ErrNotFound) {
 		http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
@@ -365,3 +371,31 @@ func (s *Server) handleGetUser(writer http.ResponseWriter, request *http.Request
 		return
 	}
 }
+
+func (s *Server) handleGetStatusAndTag(writer http.ResponseWriter, request *http.Request)  {
+	value := request.Context().Value(types.Key("key"))
+	userID := value.(int64)
+	
+	items, err := s.userSvc.GetStatusAndTag(request.Context(), userID)
+	if errors.Is(err, service.ErrNotFound) {
+		http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(items)
+	if err != nil {
+		lg.Error(err)
+		return
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	_, err = writer.Write(data)
+
+	if err != nil {
+		lg.Error(err)
+		return
+	}
+}
+

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -66,6 +67,12 @@ type Comment struct {
 	UserID    int64     `json:"user_id"`
 }
 
+// TagStatus type
+type TagStatus struct {
+	Tag    string `json:"tag"`
+	Status string `json:"status"`
+}
+
 // NewUser method
 func (s *Service) NewUser(ctx context.Context, item *User) (*User, error) {
 	user := &User{}
@@ -116,9 +123,18 @@ func (s *Service) DeleteTaskByID(ctx context.Context, id int64, userID int64) (*
 }
 
 // GetAllTasks method
-func (s *Service) GetAllTasks(ctx context.Context, userID int64) ([]*Task, error) {
+func (s *Service) GetAllTasks(ctx context.Context, userID int64, tag string, status string) ([]*Task, error) {
 	items := make([]*Task, 0)
-	rows, err := s.pool.Query(ctx, "SELECT * FROM tasks")
+	//query1 := fmt.Sprintf("SELECT * FROM tasks WHERE user_id=%d AND '%s' = ANY(tags)", userID, tag)
+	var query string
+	log.Println("Status:", status)
+	log.Println("Tag:", tag)
+	if len(status) > 0 || len(tag) > 0 {
+		query = fmt.Sprintf("select t.id, t.title, t.description, t.tags, s.id status_id, t.created_at, t.updated_at, t.user_id from tasks t inner join status s on t.status_id=s.id where t.user_id=%d and (s.name='%s' or '%s' = ANY(t.tags));", userID, status, tag)
+	} else {
+		query = fmt.Sprintf("select * from tasks where user_id=%d", userID)
+	}
+	rows, err := s.pool.Query(ctx, query)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -132,6 +148,7 @@ func (s *Service) GetAllTasks(ctx context.Context, userID int64) ([]*Task, error
 	for rows.Next() {
 		item := &Task{}
 		err := rows.Scan(&item.ID, &item.Title, &item.Description, &item.Tags, &item.StatusID, &item.CreatedAt, &item.UpdatedAt, &item.UserID)
+		log.Println(item)
 		if err != nil {
 			log.Print(err)
 			return nil, err
@@ -210,4 +227,41 @@ func (s *Service) GetUserInfo(ctx context.Context, userID int64) (*User, error) 
 	}
 
 	return user, nil
+}
+
+// GetStatusAndTag method
+func (s *Service) GetStatusAndTag(ctx context.Context, userID int64) ([]*TagStatus, error) {
+	items := make([]*TagStatus, 0)
+	//query1 := fmt.Sprintf("SELECT * FROM tasks WHERE user_id=%d AND '%s' = ANY(tags)", userID, tag)
+
+	query := fmt.Sprintf("select distinct unnest(t.tags) as tag, s.name from tasks t inner join status s on t.status_id=s.id where t.user_id=%d;", userID)
+
+	rows, err := s.pool.Query(ctx, query)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		log.Print(err)
+		return nil, ErrInternal
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		item := &TagStatus{}
+		err := rows.Scan(&item.Tag, &item.Status)
+		log.Println(item)
+		if err != nil {
+			log.Print(err)
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+	return items, nil
 }
