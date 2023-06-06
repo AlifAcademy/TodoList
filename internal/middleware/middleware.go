@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"github.com/AlifAcademy/TodoList/pkg/types"
 )
@@ -18,7 +17,6 @@ func Basic(auth func(login, password string) (int64, bool)) func(handler http.Ha
 				return
 			}
 			userID, isOk := auth(basicLogin, basicPassword)
-			log.Println("asdfasf:", userID)
 			if  !isOk{
 				http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 				return
