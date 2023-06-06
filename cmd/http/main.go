@@ -3,12 +3,13 @@ package main
 import (
 	"net"
 	"net/http"
-
 	"github.com/AlifAcademy/TodoList/config"
 	"github.com/AlifAcademy/TodoList/internal/db/postgres"
 	"github.com/AlifAcademy/TodoList/internal/logger"
 	"github.com/AlifAcademy/TodoList/internal/server"
 	"github.com/gorilla/mux"
+	"github.com/AlifAcademy/TodoList/internal/service"
+	"github.com/AlifAcademy/TodoList/internal/service/security"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"go.uber.org/dig"
@@ -24,8 +25,11 @@ func main() {
 		config.New,
 		server.NewServer,
 		mux.NewRouter,
+		postgres.NewPostgresDB,
 		logger.NewFileLogger,
 		serverInit,
+		service.NewService,
+		security.NewService,
 	}
 	
 	container := dig.New()
