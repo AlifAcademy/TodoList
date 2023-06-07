@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 	"time"
-
+	"strings"
 	"github.com/AlifAcademy/TodoList/internal/logger"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -123,14 +123,18 @@ func (s *Service) DeleteTaskByID(ctx context.Context, id int64, userID int64) (*
 }
 
 // GetAllTasks method
-func (s *Service) GetAllTasks(ctx context.Context, userID int64, tag string, status string) ([]*Task, error) {
+func (s *Service) GetAllTasks(ctx context.Context, userID int64, tag string, status string, searchText string) ([]*Task, error) {
 	items := make([]*Task, 0)
-	//query1 := fmt.Sprintf("SELECT * FROM tasks WHERE user_id=%d AND '%s' = ANY(tags)", userID, tag)
 	var query string
 	log.Println("Status:", status)
 	log.Println("Tag:", tag)
+	status = strings.Title(status)
+	tag = strings.ToLower(tag)
 	if len(status) > 0 || len(tag) > 0 {
 		query = fmt.Sprintf("select t.id, t.title, t.description, t.tags, s.id status_id, t.created_at, t.updated_at, t.user_id from tasks t inner join status s on t.status_id=s.id where t.user_id=%d and (s.name='%s' or '%s' = ANY(t.tags));", userID, status, tag)
+	} else if (len(searchText) > 0) {
+		log.Println("Search text:", searchText)
+		query = fmt.Sprintf("select * from tasks where description like '%%%s%%' and user_id=%d;", searchText, userID)
 	} else {
 		query = fmt.Sprintf("select * from tasks where user_id=%d", userID)
 	}
@@ -234,7 +238,7 @@ func (s *Service) GetStatusAndTag(ctx context.Context, userID int64) ([]*TagStat
 	items := make([]*TagStatus, 0)
 	//query1 := fmt.Sprintf("SELECT * FROM tasks WHERE user_id=%d AND '%s' = ANY(tags)", userID, tag)
 
-	query := fmt.Sprintf("select distinct unnest(t.tags) as tag, s.name from tasks t inner join status s on t.status_id=s.id where t.user_id=%d;", userID)
+	query := fmt.Sprintf("select unnest(t.tags) as tag, s.name from tasks t inner join status s on t.status_id=s.id where t.user_id=%d;", userID)
 
 	rows, err := s.pool.Query(ctx, query)
 	if errors.Is(err, sql.ErrNoRows) {

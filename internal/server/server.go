@@ -175,12 +175,13 @@ func (s *Server) handleDeleteTaskByID(writer http.ResponseWriter, request *http.
 func (s *Server) handleGetAllTasks(writer http.ResponseWriter, request *http.Request)  {
 	status := request.URL.Query().Get("status")
 	tag := request.URL.Query().Get("tag")
+	searchText := request.URL.Query().Get("search")
 	log.Print(tag)
 
 	value := request.Context().Value(types.Key("key"))
 	userID := value.(int64)
 	
-	items, err := s.userSvc.GetAllTasks(request.Context(), userID, tag, status)
+	items, err := s.userSvc.GetAllTasks(request.Context(), userID, tag, status, searchText)
 	if errors.Is(err, service.ErrNotFound) {
 		http.Error(writer, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
