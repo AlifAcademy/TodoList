@@ -58,6 +58,7 @@ func (s *Server) Init() {
 
 	s.mux.Handle("/api/tasks", chMd(http.HandlerFunc(s.handleNewTask))).Methods(POST)
 	s.mux.Handle("/api/tasks/{id}", chMd(http.HandlerFunc(s.handleDeleteTaskByID))).Methods(DELETE)
+	s.mux.Handle("/api/tasks/{id}", chMd(http.HandlerFunc(s.handleGetTaskByID))).Methods(GET)
 	s.mux.Handle("/api/tasks", chMd(http.HandlerFunc(s.handleGetAllTasks))).Methods(GET)
 	s.mux.Handle("/api/tasks", chMd(http.HandlerFunc(s.handleUpdateTask))).Methods(UPDATE)
 	s.mux.Handle("/api/tasks/complete/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCompeted))).Methods(UPDATE)
@@ -102,12 +103,13 @@ func (s *Server) handleNewTask(writer http.ResponseWriter, request *http.Request
 	userID := value.(int64)
 	err := json.NewDecoder(request.Body).Decode(&task)
 
-	if err != nil {
+	if err != nil || len(task.Title) == 0 {
 		writer.Write(models.ResponseError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest)).ToBytes())
 		return
 	}
 	task.CreatedAt = time.Now()
 	task.UpdatedAt = time.Now()
+	task.StatusID = 4
 
 	items, err := s.userSvc.NewTask(request.Context(), task, userID)
 
@@ -358,6 +360,39 @@ func (s *Server) handleGetStatusAndTag(writer http.ResponseWriter, request *http
 		return
 	}
 	_, err = writer.Write(models.ResponseWrite("Tags and Statuses retrieved successfully!", items).ToBytes())
+
+	if err != nil {
+		lg.Error(err)
+		return
+	}
+}
+
+func (s *Server) handleGetTaskByID(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+
+	idParam, ok := mux.Vars(request)["id"]
+	if !ok {
+		writer.Write(models.ResponseError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest)).ToBytes())
+		return
+	}
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		lg.Error(err)
+	}
+	value := request.Context().Value(types.Key("key"))
+	userID := value.(int64)
+
+	items, err := s.userSvc.GetTaskByID(request.Context(), userID, id)
+	if errors.Is(err, service.ErrNotFound) {
+		writer.Write(models.ResponseError(http.StatusNotFound, "Task Not Found").ToBytes())
+		return
+	}
+	if err != nil {
+		writer.Write(models.ResponseError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)).ToBytes())
+		return
+	}
+
+	_, err = writer.Write(models.ResponseWrite("Task Successfully Retrieved!", items).ToBytes())
 
 	if err != nil {
 		lg.Error(err)
