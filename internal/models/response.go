@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// Meta is a struct information response
 type Meta struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -22,16 +23,19 @@ type Pagination struct {
 	To          int64 `json:"to"`
 }
 
+// Payload is a struct for Date Payload
 type Payload struct {
 	Items      interface{} `json:"items"`
 	Pagination *Pagination `json:"pagination,omitempty"`
 }
 
+// Response is a struct for response
 type Response struct {
 	Meta    Meta     `json:"meta"`
 	Payload *Payload `json:"payload"`
 }
 
+// ResponseWrite ....
 func ResponseWrite(message string, data interface{}) *Response {
 	return &Response{
 		Meta: Meta{
@@ -45,6 +49,7 @@ func ResponseWrite(message string, data interface{}) *Response {
 	}
 }
 
+// ResponseError ....
 func ResponseError(statusCode int, message string) *Response {
 	return &Response{
 		Meta: Meta{
@@ -55,6 +60,7 @@ func ResponseError(statusCode int, message string) *Response {
 	}
 }
 
+// ToBytes convert to []byte message Response
 func (response *Response) ToBytes() []byte {
 	data, err := json.Marshal(response)
 	if err != nil {
