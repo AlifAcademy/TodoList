@@ -233,3 +233,17 @@ func (s *Service) GetStatusAndTag(ctx context.Context, userID int64) ([]*models.
 	}
 	return items, nil
 }
+
+// GetTaskByID method
+func (s *Service) GetTaskByID(ctx context.Context, userID int64, taskID int64) (*models.Task, error) {
+	item := &models.Task{}
+
+	err := s.pool.QueryRow(ctx, `SELECT * FROM tasks WHERE id=$1 and user_id=$2;`, taskID, userID).Scan(&item.ID, &item.Title, &item.Description, &item.Tags, &item.StatusID, &item.CreatedAt, &item.UpdatedAt, &item.UserID)
+
+	if err != nil {
+		lg.Error(err)
+		return nil, ErrNotFound
+	}
+
+	return item, nil
+}
