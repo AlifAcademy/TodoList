@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/AlifAcademy/TodoList/config"
+	"github.com/AlifAcademy/TodoList/internal/models"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -67,6 +68,27 @@ func Seeder(db *pgxpool.Pool) error {
 	_, err = db.Exec(context.TODO(), CreateTableComments)
 	if err != nil {
 	  log.Println("the Comments table exists")
+	}
+
+	statuses := []models.Status{
+		{ID: 1, Name: "Completed", CodeName: "completed"},
+		{ID: 2, Name: "Cancel", CodeName: "cancel"},
+		{ID: 3, Name: "InProgress", CodeName: "in_progress"},
+		{ID: 4, Name: "New", CodeName: "new"},
+	}
+
+	sqlWhere := "INSERT INTO status (id, name, code_name) VALUES"
+
+	for i, status := range statuses {
+		sqlWhere = sqlWhere + fmt.Sprintf("(%d, '%s', '%s')", status.ID, status.Name, status.CodeName)
+		if i != len(statuses)-1 {
+			sqlWhere += ","
+		}
+	}
+
+	_, err = db.Exec(context.TODO(), sqlWhere)
+	if err != nil {
+		log.Println("the Statuses table exists")
 	}
   
 	return nil

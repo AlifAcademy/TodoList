@@ -37,3 +37,10 @@ type TagStatus struct {
 	Tag    string `json:"tag"`
 	Status string `json:"status"`
 }
+
+
+type Status struct {
+	ID			int64	`json:"id"`
+	Name		string	`json:"name"`
+	CodeName	string	`json:"code_name"`
+}
