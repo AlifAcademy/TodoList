@@ -52,11 +52,22 @@ func (c configDB) GenerateDSN() string {
 }
 
 func Seeder(db *pgxpool.Pool) error {
-
-	_, err := db.Exec(context.TODO(), CREATE_TABLE_STATUS)
+	_, err := db.Exec(context.TODO(), CreateTableStatus)
 	if err != nil {
-		return nil
+	  log.Println("the Status table exists")
 	}
-
+	_, err = db.Exec(context.TODO(), CreateTableUSERS)
+	if err != nil {
+	  log.Println("the Users table exists")
+	}
+	_, err = db.Exec(context.TODO(), CreateTableTasks)
+	if err != nil {
+	  log.Println("the Task table exists")
+	}
+	_, err = db.Exec(context.TODO(), CreateTableComments)
+	if err != nil {
+	  log.Println("the Comments table exists")
+	}
+  
 	return nil
 }
