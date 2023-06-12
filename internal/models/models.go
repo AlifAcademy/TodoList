@@ -30,7 +30,6 @@ type Comment struct {
 	CreatedAt time.Time `json:"created_at"`
 	TaskID    int64     `json:"task_id"`
 	UserID    int64     `json:"user_id"`
-	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // TagStatus type
