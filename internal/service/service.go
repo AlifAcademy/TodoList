@@ -247,3 +247,16 @@ func (s *Service) GetTaskByID(ctx context.Context, userID int64, taskID int64) (
 
 	return item, nil
 }
+
+// DeleteCommentByID method
+func (s *Service) DeleteCommentByID(ctx context.Context, id int64, userID int64) (*models.Comment, error) {
+	comment := &models.Comment{}
+	err := s.pool.QueryRow(ctx, "DELETE FROM comments WHERE id=$1 and user_id=$2 RETURNING *;", id, userID).Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.TaskID, &comment.UpdatedAt, &comment.UserID)
+  
+	if err != nil {
+	  lg.Error(err)
+	  return nil, ErrNotFound
+	}
+  
+	return comment, nil
+  }
