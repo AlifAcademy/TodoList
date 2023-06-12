@@ -63,6 +63,7 @@ func (s *Server) Init() {
 	s.mux.Handle("/api/tasks", chMd(http.HandlerFunc(s.handleUpdateTask))).Methods(UPDATE)
 	s.mux.Handle("/api/tasks/complete/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCompeted))).Methods(UPDATE)
 	s.mux.Handle("/api/tasks/cancel/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCanceled))).Methods(UPDATE)
+	s.mux.Handle("/api/comments/{id}", chMd(http.HandlerFunc(s.handleDeleteCommentByID))).Methods(DELETE)
 
 	s.mux.Handle("/api/comments", chMd(http.HandlerFunc(s.handleAddComment))).Methods(POST)
 
