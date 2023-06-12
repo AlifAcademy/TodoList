@@ -63,6 +63,7 @@ func (s *Server) Init() {
 	s.mux.Handle("/api/tasks", chMd(http.HandlerFunc(s.handleUpdateTask))).Methods(UPDATE)
 	s.mux.Handle("/api/tasks/complete/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCompeted))).Methods(UPDATE)
 	s.mux.Handle("/api/tasks/cancel/{id}", chMd(http.HandlerFunc(s.handleMarkTaskAsCanceled))).Methods(UPDATE)
+	s.mux.Handle("/api/comments/{id}", chMd(http.HandlerFunc(s.handleDeleteCommentByID))).Methods(DELETE)
 
 	s.mux.Handle("/api/comments", chMd(http.HandlerFunc(s.handleAddComment))).Methods(POST)
 
@@ -399,3 +400,36 @@ func (s *Server) handleGetTaskByID(writer http.ResponseWriter, request *http.Req
 		return
 	}
 }
+
+func (s *Server) handleDeleteCommentByID(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "application/json")
+  
+	idParam, ok := mux.Vars(request)["id"]
+	if !ok {
+	  writer.Write(models.ResponseError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest)).ToBytes())
+	  return
+	}
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+	  lg.Error(err)
+	}
+	value := request.Context().Value(types.Key("key"))
+	userID := value.(int64)
+  
+	items, err := s.userSvc.DeleteCommentByID(request.Context(), id, userID)
+	if errors.Is(err, service.ErrNotFound) {
+	  writer.Write(models.ResponseError(http.StatusNotFound, "Comment Not Found").ToBytes())
+	  return
+	}
+	if err != nil {
+	  writer.Write(models.ResponseError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)).ToBytes())
+	  return
+	}
+  
+	_, err = writer.Write(models.ResponseWrite("Comment Successfully Deleted!", items).ToBytes())
+  
+	if err != nil {
+	  lg.Error(err)
+	  return
+	}
+  }
