@@ -260,3 +260,16 @@ func (s *Service) DeleteCommentByID(ctx context.Context, id int64, userID int64)
   
 	return comment, nil
   }
+
+  // UpdateComment method
+func (s *Service) UpdateComment(ctx context.Context, item *models.Comment, userID int64) (*models.Comment, error) {
+	comment := &models.Comment{}
+	err := s.pool.QueryRow(ctx, `UPDATE comments SET content=$1 WHERE id=$2 and user_id=$3 RETURNING *;`, item.Content, item.ID, userID).Scan(&comment.ID, &comment.Content, &comment.CreatedAt, &comment.TaskID, &comment.UserID)
+
+	if err != nil {
+		lg.Error(err)
+		return nil, ErrNotFound
+	}
+
+	return comment, nil
+}
