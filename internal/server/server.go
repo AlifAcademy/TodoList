@@ -68,6 +68,8 @@ func (s *Server) Init() {
 	s.mux.Handle("/api/comments", chMd(http.HandlerFunc(s.handleAddComment))).Methods(POST)
 
 	s.mux.Handle("/api/tagstatus", chMd(http.HandlerFunc(s.handleGetStatusAndTag))).Methods(GET)
+	s.mux.Handle("/api/comments", chMd(http.HandlerFunc(s.handleUpdateComment))).Methods(UPDATE)
+
 }
 
 func (s *Server) handleNewUser(writer http.ResponseWriter, request *http.Request) {
@@ -433,3 +435,36 @@ func (s *Server) handleDeleteCommentByID(writer http.ResponseWriter, request *ht
 	  return
 	}
   }
+
+
+  func (s *Server) handleUpdateComment(writer http.ResponseWriter, request *http.Request) {
+	var comment *models.Comment
+	value := request.Context().Value(types.Key("key"))
+	userID := value.(int64)
+	err := json.NewDecoder(request.Body).Decode(&comment)
+
+	writer.Header().Set("Content-Type", "application/json")
+
+	if err != nil {
+		lg.Error(err)
+		writer.Write(models.ResponseError(http.StatusBadRequest, http.StatusText(http.StatusBadRequest)).ToBytes())
+		return
+	}
+
+	items, err := s.userSvc.UpdateComment(request.Context(), comment, userID)
+
+	if errors.Is(err, service.ErrNotFound) {
+		writer.Write(models.ResponseError(http.StatusNotFound, http.StatusText(http.StatusNotFound)).ToBytes())
+		return
+	}
+	if err != nil {
+		writer.Write(models.ResponseError(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError)).ToBytes())
+		return
+	}
+	_, err = writer.Write(models.ResponseWrite("Comment successfully updated!", items).ToBytes())
+
+	if err != nil {
+		lg.Error(err)
+		return
+	}
+}
